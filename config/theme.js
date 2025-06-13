@@ -18,7 +18,7 @@ module.exports = {
   'link-hover-color': '#CC2931',
   'link-active-color': '#FAF8F7',
   'success-color': '#239C5B',
-  'warning-color': '#FFCC17',
+  'warn-color': '#FFCC17',
   'error-color': '#E90004',
   'btn-default-color': '#CC2931',
   'btn-default-border': '#000000',
