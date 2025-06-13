@@ -13,14 +13,14 @@
 // limitations under the License.
 
 module.exports = {
-  'primary-color': '#0C63FA',
-  'link-color': '#0C63FA',
-  'success-color': '#52C41A',
-  'warning-color': '#FAAD14',
-  'error-color': '#D40000',
-  'btn-default-color': '#0C63FA',
-  'btn-default-border': '#0C63FA',
-  'border-color-base': '#E8E8EA',
+  'primary-color': '#232323',
+  'link-color': '#232323',
+  'success-color': '#232323',
+  'warning-color': '#232323',
+  'error-color': '#232323',
+  'btn-default-color': '#232323',
+  'btn-default-border': '#232323',
+  'border-color-base': '#232323',
   'border-radius-base': '2px',
   'font-size-base': '12px',
 };
