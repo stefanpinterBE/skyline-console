@@ -29,9 +29,19 @@ export class HealthMonitorStep extends Base {
     return true;
   }
 
+  get isOVN() {
+    const { context: { provider } = {} } = this.props;
+    return provider === 'ovn';
+  }
+
   get filteredProtocolOptions() {
     const { context: { listener_protocol = '' } = {} } = this.props;
-    return healthProtocols.filter((it) => listener_protocol.includes(it.label));
+    const base = healthProtocols.filter((it) =>
+      listener_protocol.includes(it.label)
+    );
+    return this.isOVN
+      ? base.filter((it) => ['TCP', 'UDP-CONNECT'].includes(it.value))
+      : base;
   }
 
   get defaultValue() {
@@ -42,13 +52,20 @@ export class HealthMonitorStep extends Base {
       health_max_retries: 3,
       health_type: '',
       monitor_admin_state_up: true,
+      health_url_path: '/',
     };
   }
+
+  handleHealthTypeChange = (value) => {
+    this.setState({
+      health_type: value,
+    });
+  };
 
   allowed = () => Promise.resolve();
 
   get formItems() {
-    const { health_delay, enableHealthMonitor } = this.state;
+    const { health_delay, enableHealthMonitor, health_type } = this.state;
     return [
       {
         name: 'enableHealthMonitor',
@@ -116,6 +133,7 @@ export class HealthMonitorStep extends Base {
         options: this.filteredProtocolOptions,
         required: true,
         hidden: !enableHealthMonitor,
+        onChange: this.handleHealthTypeChange,
       },
       {
         name: 'monitor_admin_state_up',
@@ -123,6 +141,29 @@ export class HealthMonitorStep extends Base {
         type: 'switch',
         tip: t('Defines the admin state of the health monitor.'),
         hidden: !enableHealthMonitor,
+      },
+      {
+        name: 'health_url_path',
+        label: t('Monitoring URL'),
+        type: 'input',
+        rules: [
+          { required: false },
+          {
+            validator: (_, value) => {
+              if (value && !value.startsWith('/')) {
+                return Promise.reject(new Error(t('URL must start with /')));
+              }
+              return Promise.resolve();
+            },
+          },
+        ],
+        initialValue: '/',
+        placeholder: t('e.g., /status.html or /healthcheck.html'),
+        extra: t(
+          'Defaults to "/" if left blank. Recommended: use a dedicated status page like "/status.html". This option is not applicable for TCP and UDP health monitor types.'
+        ),
+        hidden: !enableHealthMonitor || this.isOVN,
+        disabled: health_type === 'TCP' || health_type === 'UDP-CONNECT',
       },
     ];
   }

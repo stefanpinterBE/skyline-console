@@ -88,6 +88,16 @@ export class OctaviaClient extends Base {
           },
         ],
       },
+      {
+        name: 'flavors',
+        key: 'lbaas/flavors',
+        responseKey: 'flavor',
+      },
+      {
+        name: 'providers',
+        key: 'lbaas/providers',
+        responseKey: 'provider',
+      },
     ];
   }
 }
