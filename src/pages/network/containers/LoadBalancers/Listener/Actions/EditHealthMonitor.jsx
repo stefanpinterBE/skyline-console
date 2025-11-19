@@ -31,6 +31,7 @@ export class EditHealthMonitor extends ModalAction {
       enableHealthMonitor: false,
       dataLoading: true,
       healthMonitor: null,
+      healthType: '',
     };
   }
 
@@ -60,6 +61,12 @@ export class EditHealthMonitor extends ModalAction {
     return healthProtocols.filter((it) => protocol.includes(it.label));
   }
 
+  handleHealthTypeChange = (value) => {
+    this.setState({
+      healthType: value,
+    });
+  };
+
   get defaultValue() {
     const { healthMonitor } = this.state;
     if (!healthMonitor) {
@@ -69,6 +76,7 @@ export class EditHealthMonitor extends ModalAction {
         max_retries: 3,
         enableHealthMonitor: false,
         admin_state_up: true,
+        url_path: '/',
       };
     }
     const {
@@ -78,6 +86,7 @@ export class EditHealthMonitor extends ModalAction {
       delay,
       timeout,
       max_retries,
+      url_path,
     } = healthMonitor;
     return {
       enableHealthMonitor: true,
@@ -87,6 +96,7 @@ export class EditHealthMonitor extends ModalAction {
       delay,
       timeout,
       max_retries,
+      url_path,
     };
   }
 
@@ -112,6 +122,7 @@ export class EditHealthMonitor extends ModalAction {
       {
         healthMonitor,
         enableHealthMonitor: !!healthMonitor,
+        healthType: healthMonitor?.type || '',
         dataLoading: false,
       },
       () => {
@@ -121,7 +132,8 @@ export class EditHealthMonitor extends ModalAction {
   }
 
   get formItems() {
-    const { enableHealthMonitor, dataLoading, healthMonitor } = this.state;
+    const { enableHealthMonitor, dataLoading, healthMonitor, healthType } =
+      this.state;
     if (dataLoading) {
       return [
         {
@@ -155,6 +167,7 @@ export class EditHealthMonitor extends ModalAction {
         hidden: !enableHealthMonitor,
         required: true,
         disabled: !!healthMonitor,
+        onChange: this.handleHealthTypeChange,
       },
       {
         name: 'delay',
@@ -194,6 +207,24 @@ export class EditHealthMonitor extends ModalAction {
         tip: t('Defines the admin state of the health monitor.'),
         hidden: !enableHealthMonitor,
       },
+      {
+        name: 'url_path',
+        label: t('Monitoring URL'),
+        type: 'input',
+        required: false,
+        validator: (_, value) => {
+          if (value && !value.startsWith('/')) {
+            return Promise.reject(new Error(t('URL must start with /')));
+          }
+          return Promise.resolve();
+        },
+        placeholder: t('e.g., /status.html or /healthcheck.html'),
+        extra: t(
+          'Defaults to "/" if left blank. Recommended: use a dedicated status page like "/status.html". This option is not applicable for TCP and UDP health monitor types.'
+        ),
+        hidden: !enableHealthMonitor,
+        disabled: healthType === 'TCP' || healthType === 'UDP-CONNECT',
+      },
     ];
   }
 
@@ -201,12 +232,18 @@ export class EditHealthMonitor extends ModalAction {
     const { default_pool_id } = this.item;
     const { healthMonitor } = this.state;
     const { id } = healthMonitor || {};
-    const { enableHealthMonitor, type, ...others } = values;
+    const { enableHealthMonitor, type, url_path, ...others } = values;
+    const updatedUrlPath = url_path ?? '/';
     if (id) {
       if (!enableHealthMonitor) {
         return globalHealthMonitorStore.delete({ id });
       }
-      return globalHealthMonitorStore.edit({ id }, others);
+      // Exclude url_path from payload when TCP or UDP-CONNECT is selected
+      const editData = { ...others };
+      if (type !== 'TCP' && type !== 'UDP-CONNECT') {
+        editData.url_path = updatedUrlPath;
+      }
+      return globalHealthMonitorStore.edit({ id }, editData);
     }
     if (!enableHealthMonitor) {
       return Promise.resolve();
@@ -216,6 +253,10 @@ export class EditHealthMonitor extends ModalAction {
       ...others,
       pool_id: default_pool_id,
     };
+    // Exclude url_path from payload when TCP or UDP-CONNECT is selected
+    if (type !== 'TCP' && type !== 'UDP-CONNECT') {
+      data.url_path = updatedUrlPath;
+    }
     return globalHealthMonitorStore.create(data);
   };
 }
