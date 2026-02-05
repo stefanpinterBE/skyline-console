@@ -27,7 +27,7 @@ export const endpointVersionMap = {
   neutron: 'v2.0',
   ironic: 'v1',
   heat: 'v1',
-  octavia: 'v2',
+  octavia: 'v2.0',
   swift: 'v1',
   trove: 'v1.0',
   manilav2: 'v2',
