@@ -28,11 +28,6 @@ export const getBaseTemplateColumns = (self) => [
     hidden: !self.isAdminPage,
   },
   {
-    title: t('COE'),
-    isHideable: true,
-    dataIndex: 'coe',
-  },
-  {
     title: t('Network Driver'),
     isHideable: true,
     dataIndex: 'network_driver',

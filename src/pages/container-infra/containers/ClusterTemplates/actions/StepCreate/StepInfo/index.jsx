@@ -39,7 +39,6 @@ export class StepInfo extends Base {
       const {
         extra: {
           name,
-          coe,
           public: publics,
           hidden,
           registry_enabled,
@@ -48,7 +47,7 @@ export class StepInfo extends Base {
       } = this.props;
       values = {
         name,
-        coe,
+        coe: 'kubernetes',
         public: publics,
         hidden,
         registry_enabled,
@@ -65,34 +64,6 @@ export class StepInfo extends Base {
         label: t('Cluster Template Name'),
         type: 'input',
         placeholder: t('Please input cluster template name'),
-        required: true,
-      },
-      {
-        name: 'coe',
-        label: t('COE'),
-        type: 'select',
-        options: [
-          {
-            label: t('Kubernetes'),
-            value: 'kubernetes',
-          },
-          {
-            label: t('Docker Swarm'),
-            value: 'swarm',
-          },
-          {
-            label: t('Docker Swarm Mode'),
-            value: 'swarm-mode',
-          },
-          {
-            label: t('Mesos'),
-            value: 'mesos',
-          },
-          {
-            label: t('DC/OS'),
-            value: 'dcos',
-          },
-        ],
         required: true,
       },
       {

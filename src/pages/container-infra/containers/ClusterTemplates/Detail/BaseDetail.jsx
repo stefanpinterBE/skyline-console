@@ -33,10 +33,6 @@ export class BaseDetail extends Base {
   get baseInfoCard() {
     const options = [
       {
-        label: t('COE'),
-        dataIndex: 'coe',
-      },
-      {
         label: t('Cluster Distro'),
         dataIndex: 'cluster_distro',
       },

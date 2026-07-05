@@ -58,22 +58,11 @@ export class StepNetwork extends Base {
   }
 
   get networkDrivers() {
-    const { context: { coe = '' } = {} } = this.props;
-    let acceptedDrivers = [];
-    if (coe === 'kubernetes') {
-      acceptedDrivers = [
+    return [
         { value: 'calico', label: 'Calico' },
+        { value: 'cilium', label: 'Cilium' },
         { value: 'flannel', label: 'Flannel' },
-      ];
-    } else if (['swarm', 'swarm-mode'].includes(coe)) {
-      acceptedDrivers = [
-        { value: 'docker', label: 'Docker' },
-        { value: 'flannel', label: 'Flannel' },
-      ];
-    } else if (['mesos', 'dcos'].includes(coe)) {
-      acceptedDrivers = [{ value: 'docker', label: 'Docker' }];
-    }
-    return acceptedDrivers;
+    ];
   }
 
   get defaultValue() {

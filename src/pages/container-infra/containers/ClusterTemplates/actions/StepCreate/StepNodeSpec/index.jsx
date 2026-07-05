@@ -87,16 +87,7 @@ export class StepNodeSpec extends Base {
   }
 
   get acceptedImageOs() {
-    const { context: { coe = '' } = {} } = this.props;
-    let acceptedOs = [];
-    if (coe === 'kubernetes') {
-      acceptedOs = ['fedora-coreos'];
-    } else if (['swarm', 'swarm-mode'].includes(coe)) {
-      acceptedOs = ['fedora-atomic'];
-    } else {
-      acceptedOs = ['ubuntu'];
-    }
-    return acceptedOs;
+    return ['ubuntu'];
   }
 
   get imageColumns() {
@@ -111,14 +102,9 @@ export class StepNodeSpec extends Base {
   }
 
   get volumeDrivers() {
-    const { context: { coe = '' } = {} } = this.props;
-    let acceptedVolumeDriver = [];
-    if (coe === 'kubernetes') {
-      acceptedVolumeDriver = [{ value: 'cinder', label: 'Cinder' }];
-    } else if (['swarm', 'mesos'].includes(coe)) {
-      acceptedVolumeDriver = [{ value: 'rexray', label: 'Rexray' }];
-    }
-    return acceptedVolumeDriver;
+    return [
+      { value: 'cinder', label: 'Cinder' },
+    ];
   }
 
   get defaultValue() {
@@ -260,14 +246,6 @@ export class StepNodeSpec extends Base {
         label: t('Docker Storage Driver'),
         type: 'select',
         options: [
-          {
-            label: t('Devicemapper'),
-            value: 'devicemapper',
-          },
-          {
-            label: t('Overlay'),
-            value: 'overlay',
-          },
           {
             label: t('Overlay2'),
             value: 'overlay2',

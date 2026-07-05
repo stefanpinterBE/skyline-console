@@ -44,10 +44,6 @@ export class BaseDetail extends Base {
         dataIndex: 'template.name',
         content: templateUrl,
       },
-      {
-        label: t('COE'),
-        dataIndex: 'template.coe',
-      },
     ];
 
     return {
@@ -138,12 +134,8 @@ export class BaseDetail extends Base {
         dataIndex: 'docker_volume_size',
       },
       {
-        label: t('COE Version'),
+        label: t('Kubernetes Version'),
         dataIndex: 'coe_version',
-      },
-      {
-        label: t('Container Version'),
-        dataIndex: 'container_version',
       },
     ];
 
