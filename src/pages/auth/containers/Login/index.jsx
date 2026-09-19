@@ -48,7 +48,13 @@ export class Login extends Component {
 
   async getSSO() {
     try {
-      this.store.fetchSSO();
+      await this.store.fetchSSO();
+      const ssoOptions = this.SSOOptions;
+      if (ssoOptions.length > 0) {
+        this.setState({ loginTypeOption: ssoOptions[0] }, () => {
+          this.updateDefaultValue();
+        });
+      }
     } catch (e) {
       console.log(e);
     }
@@ -104,7 +110,7 @@ export class Login extends Component {
 
   get ssoProtocols() {
     return {
-      openid: t('OpenID Connect'),
+      openid: t('BearingPoint SSO'),
     };
   }
 
@@ -155,8 +161,9 @@ export class Login extends Component {
   }
 
   get defaultValue() {
+    const { loginTypeOption: { value } = {} } = this.state;
     const data = {
-      loginType: 'password',
+      loginType: value || 'password',
     };
     if (this.regions.length === 1) {
       data.region = this.regions[0].value;
