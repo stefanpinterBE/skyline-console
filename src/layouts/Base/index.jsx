@@ -20,6 +20,7 @@ import { isAdminPage, isUserCenterPage } from 'utils/index';
 import { BellOutlined } from '@ant-design/icons';
 import checkItemPolicy from 'resources/skyline/policy';
 import { Layout } from 'antd';
+import DocumentTitle from 'react-document-title';
 import GlobalHeader from 'components/Layout/GlobalHeader';
 import { setRouteMap, getPath } from 'utils/route-map';
 import { getLocalStorageItem } from 'utils/local-storage';
@@ -64,6 +65,15 @@ export class BaseLayout extends Component {
 
   get rootStore() {
     return this.props.rootStore;
+  }
+
+  get title() {
+    const defaultTitle = 'BeCloud Dashboard';
+    const { info = {} } = this.rootStore;
+    const { title = {} } = info || {};
+    const { getLocaleShortName } = i18n;
+    const language = getLocaleShortName();
+    return title[language] || defaultTitle;
   }
 
   get noticeCount() {
@@ -262,27 +272,29 @@ export class BaseLayout extends Component {
     const { pathname } = this.props.location;
     const currentRoutes = this.getCurrentMenu(pathname);
     return (
-      <div className={styles['base-layout']}>
-        {this.renderNotice()}
-        <Header className={styles.header}>
-          {/* {this.renderLogo()} */}
-          {this.renderHeader()}
-        </Header>
-        <LayoutMenu
-          pathname={pathname}
-          isAdminPage={this.isAdminPage}
-          menu={this.menu}
-          menuAll={this.menuAll}
-          currentRoutes={currentRoutes}
-          onCollapseChange={this.onCollapseChange}
-        />
-        <RightContext
-          {...this.props}
-          {...this.state}
-          currentRoutes={currentRoutes}
-          isAdminPage={this.isAdminPage}
-        />
-      </div>
+      <DocumentTitle title={this.title}>
+        <div className={styles['base-layout']}>
+          {this.renderNotice()}
+          <Header className={styles.header}>
+            {/* {this.renderLogo()} */}
+            {this.renderHeader()}
+          </Header>
+          <LayoutMenu
+            pathname={pathname}
+            isAdminPage={this.isAdminPage}
+            menu={this.menu}
+            menuAll={this.menuAll}
+            currentRoutes={currentRoutes}
+            onCollapseChange={this.onCollapseChange}
+          />
+          <RightContext
+            {...this.props}
+            {...this.state}
+            currentRoutes={currentRoutes}
+            isAdminPage={this.isAdminPage}
+          />
+        </div>
+      </DocumentTitle>
     );
   }
 }
