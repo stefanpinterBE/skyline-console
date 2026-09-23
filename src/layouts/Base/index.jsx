@@ -68,7 +68,7 @@ export class BaseLayout extends Component {
   }
 
   get title() {
-    const defaultTitle = 'BeCloud Dashboard';
+    const defaultTitle = 'BECloud Dashboard';
     const { info = {} } = this.rootStore;
     const { title = {} } = info || {};
     const { getLocaleShortName } = i18n;

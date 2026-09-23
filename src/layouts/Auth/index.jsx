@@ -18,7 +18,7 @@ import renderRoutes from 'utils/RouterConfig';
 import SelectLang from 'components/SelectLang';
 
 import logo from 'asset/image/logo.png';
-import loginFullImage from 'asset/image/login-full.png';
+import loginFullImage from 'asset/image/login-full.webp';
 import loginRightLogo from 'asset/image/loginRightLogo.png';
 import styles from './index.less';
 

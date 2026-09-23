@@ -36,7 +36,7 @@ export class BlankLayout extends Component {
   }
 
   get title() {
-    const defaultTitle = 'BeCloud Dashboard';
+    const defaultTitle = 'BECloud Dashboard';
     const { title = {} } = this.info;
     const { getLocaleShortName } = i18n;
     const language = getLocaleShortName();
