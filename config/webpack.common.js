@@ -16,16 +16,18 @@ const webpack = require('webpack');
 const { normalize, resolve } = require('path');
 // const path = require("path");
 // const CleanWebpackPlugin = require('clean-webpack-plugin');
+const crypto = require('crypto');
 const moment = require('moment');
 const { getGlobalVariables, getCustomStyleVariables } = require('./utils');
 
 const root = (path) => resolve(__dirname, `../${path}`);
 const version = moment().unix();
 
-// (jamesdenton) Remove once libs no longer hardcode the hashing algorithm
-const crypto = require("crypto");
-const crypto_orig_createHash = crypto.createHash;
-crypto.createHash = algorithm => crypto_orig_createHash(algorithm == "md4" ? "md5" : algorithm);
+// (jamesdenton) Remove once libs no longer hardcode the hashing algorithm.
+// Node 17+ dropped MD4 from OpenSSL, which webpack 4 still requests.
+const origCreateHash = crypto.createHash;
+crypto.createHash = (algorithm) =>
+  origCreateHash(algorithm === 'md4' ? 'md5' : algorithm);
 
 module.exports = {
   module: {
@@ -45,7 +47,7 @@ module.exports = {
         use: ['thread-loader', 'cache-loader'],
       },
       {
-        test: /\.(png|gif|jpg)$/,
+        test: /\.(png|gif|jpg|webp)$/,
         use: [
           {
             loader: 'url-loader',
@@ -61,7 +63,7 @@ module.exports = {
         ],
       },
       {
-        test: /\.(png|gif|jpg)$/,
+        test: /\.(png|gif|jpg|webp)$/,
         use: [
           {
             loader: 'url-loader',
