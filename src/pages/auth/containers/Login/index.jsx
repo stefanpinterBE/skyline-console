@@ -80,7 +80,7 @@ export class Login extends Component {
     const language = getLocaleShortName();
     const name =
       product_name[language] || t('Cloud Platform') || 'Cloud Platform';
-    return t('BeCloud Dashboard Login');
+    return t('BECloud Dashboard Login');
   }
 
   get regions() {
