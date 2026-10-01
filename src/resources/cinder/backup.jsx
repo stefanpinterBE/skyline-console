@@ -55,6 +55,61 @@ export const modeTip = t(
   'Create a full backup, the system will automatically create a new backup chain, the full backup name is the backup chain name; Create an incremental backup, the system will automatically create an incremental backup under the newly created backup chain.'
 );
 
+// ---------------------------------------------------------------------------
+// Backup target ("container") selection
+//
+// SCAFFOLDING ONLY: this is a placeholder UI for choosing where a backup
+// should be stored. The options below are dummy values - they do not
+// correspond to real shares/containers yet. Selecting one currently has no
+// effect on the request sent to Cinder: `container` is intentionally left
+// empty/omitted, exactly like before this feature existed, so Cinder falls
+// back to its own default placement.
+//
+// Once real backup destinations exist, replace `backupTargets` with the real
+// values (and reinstate building an actual `container` value, e.g. via a
+// helper like the previous `getBackupContainer`).
+// ---------------------------------------------------------------------------
+export const backupTargets = [
+  { value: 'dummy1', label: t('dummy1 (DC1)'), dc: 'dc1' },
+  { value: 'dummy2', label: t('dummy2 (DC1)'), dc: 'dc1' },
+  { value: 'dummy3', label: t('dummy3 (DC2)'), dc: 'dc2' },
+  { value: 'dummy4', label: t('dummy4 (DC2)'), dc: 'dc2' },
+];
+
+// Where a volume of a given DC should be backed up to. Backups are stored in
+// the *other* data center so that a DC outage does not take out the volume and
+// its backup at the same time.
+export const dcBackupTargetMap = {
+  dc1: 'dc2',
+  dc2: 'dc1',
+};
+
+/**
+ * Extract the data center suffix from a volume type name, e.g.
+ * "be.5000.dc1" -> "dc1". Volume types may also end in ".dc1.old" /
+ * ".dc2.old" (treated the same as ".dc1" / ".dc2"). Returns null when there
+ * is no recognizable suffix.
+ */
+export const getVolumeTypeDc = (volumeType = '') => {
+  const match = /\.(dc\d+)(?:\.old)?$/i.exec(volumeType || '');
+  return match ? match[1].toLowerCase() : null;
+};
+
+/**
+ * Default backup target for a volume: the first dummy option belonging to
+ * the data center opposite to the one hosting the volume.
+ */
+export const getDefaultBackupTarget = (volumeType) => {
+  const dc = getVolumeTypeDc(volumeType);
+  const targetDc = dc ? dcBackupTargetMap[dc] : null;
+  const match = backupTargets.find((it) => it.dc === targetDc);
+  return match ? match.value : null;
+};
+
+export const backupTargetTip = t(
+  'The data center the backup will be stored in. By default a backup is placed in the data center opposite to the one hosting the volume.'
+);
+
 export const restoreTip = (
   <span>
     <span style={{ fontWeight: 600 }}>

@@ -17,8 +17,25 @@ import Base from 'containers/BaseDetail';
 
 export class BaseDetail extends Base {
   get leftCards() {
-    const cards = [this.volumeCard];
+    const cards = [this.volumeCard, this.storageCard];
     return cards;
+  }
+
+  get storageCard() {
+    const options = [
+      {
+        label: t('Backup Location'),
+        dataIndex: 'container',
+        copyable: {
+          text: this.detailData.container,
+        },
+        render: (value) => value || '-',
+      },
+    ];
+    return {
+      title: t('Storage Info'),
+      options,
+    };
   }
 
   get volumeCard() {

@@ -23,6 +23,9 @@ import {
   getQuotaInfo,
   checkQuotaDisable,
   fetchQuota,
+  backupTargets,
+  backupTargetTip,
+  getDefaultBackupTarget,
 } from 'resources/cinder/backup';
 
 export class CreateBackup extends ModalAction {
@@ -45,6 +48,7 @@ export class CreateBackup extends ModalAction {
     const value = {
       volume: `${name || id}(${volume_type} | ${size}GiB)`,
       incremental: false,
+      backupTarget: getDefaultBackupTarget(volume_type),
     };
     return value;
   }
@@ -68,6 +72,14 @@ export class CreateBackup extends ModalAction {
         label: t('Volume Backup Name'),
         type: 'input-name',
         required: true,
+      },
+      {
+        name: 'backupTarget',
+        label: t('Backup Location'),
+        type: 'select',
+        options: backupTargets,
+        required: true,
+        tip: backupTargetTip,
       },
       {
         name: 'incremental',
@@ -103,6 +115,9 @@ export class CreateBackup extends ModalAction {
 
   onSubmit = (values) => {
     const { id } = this.item;
+    // NOTE: `backupTarget` is scaffolding for a future "choose backup
+    // destination" feature. It is not sent to Cinder yet - `container` is
+    // intentionally left out, so the backend behaves exactly as before.
     const { name, incremental } = values;
     const force = isInUse(this.item);
     const body = {
