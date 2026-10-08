@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import globalProjectStore from 'stores/keystone/project';
 import globalBackupStore from 'stores/cinder/backup';
 
@@ -58,27 +59,27 @@ export const modeTip = t(
 // ---------------------------------------------------------------------------
 // Backup target ("container") selection
 //
-// SCAFFOLDING ONLY: this is a placeholder UI for choosing where a backup
-// should be stored. The options below are dummy values - they do not
-// correspond to real shares/containers yet. Selecting one currently has no
-// effect on the request sent to Cinder: `container` is intentionally left
-// empty/omitted, exactly like before this feature existed, so Cinder falls
-// back to its own default placement.
+// Volume types ending in exactly ".dc1" are backed up to the DC2 share, and
+// volume types ending in exactly ".dc2" are backed up to the DC1 share - the
+// backup always lands in the data center opposite to the one hosting the
+// volume. Any other volume type - including those ending in ".dc1.old" /
+// ".dc2.old" - falls back to a third, shared location.
 //
-// Once real backup destinations exist, replace `backupTargets` with the real
-// values (and reinstate building an actual `container` value, e.g. via a
-// helper like the previous `getBackupContainer`).
+// Each backup gets its own directory below the chosen share, using the
+// sharded layout `<share>/<uuid[0:2]>/<uuid[2:4]>/<uuid>` (see
+// `getBackupContainer`), so the `container` sent to Cinder always starts with
+// one of the three share names below.
 // ---------------------------------------------------------------------------
 export const backupTargets = [
-  { value: 'dummy1', label: t('dummy1 (DC1)'), dc: 'dc1' },
-  { value: 'dummy2', label: t('dummy2 (DC1)'), dc: 'dc1' },
-  { value: 'dummy3', label: t('dummy3 (DC2)'), dc: 'dc2' },
-  { value: 'dummy4', label: t('dummy4 (DC2)'), dc: 'dc2' },
+  { value: 'dc1', label: t('Data Center 1'), share: 'stg09a_dc2_1' },
+  { value: 'dc2', label: t('Data Center 2'), share: 'stg09b_dc_2_1' },
+  { value: 'other', label: t('Other'), share: 'stg09c_dc2_2' },
 ];
 
 // Where a volume of a given DC should be backed up to. Backups are stored in
 // the *other* data center so that a DC outage does not take out the volume and
-// its backup at the same time.
+// its backup at the same time. Volume types without a recognizable DC suffix
+// fall back to 'other'.
 export const dcBackupTargetMap = {
   dc1: 'dc2',
   dc2: 'dc1',
@@ -86,24 +87,39 @@ export const dcBackupTargetMap = {
 
 /**
  * Extract the data center suffix from a volume type name, e.g.
- * "be.5000.dc1" -> "dc1". Volume types may also end in ".dc1.old" /
- * ".dc2.old" (treated the same as ".dc1" / ".dc2"). Returns null when there
- * is no recognizable suffix.
+ * "be.5000.dc1" -> "dc1". Only an exact ".dc1" / ".dc2" suffix matches -
+ * variants like ".dc1.old" do NOT match and are treated as having no
+ * recognizable suffix (null).
  */
 export const getVolumeTypeDc = (volumeType = '') => {
-  const match = /\.(dc\d+)(?:\.old)?$/i.exec(volumeType || '');
+  const match = /\.(dc\d+)$/i.exec(volumeType || '');
   return match ? match[1].toLowerCase() : null;
 };
 
 /**
- * Default backup target for a volume: the first dummy option belonging to
- * the data center opposite to the one hosting the volume.
+ * Default backup target for a volume: the data center opposite to the one
+ * hosting the volume, or 'other' when the volume type has no recognizable
+ * DC suffix.
  */
 export const getDefaultBackupTarget = (volumeType) => {
   const dc = getVolumeTypeDc(volumeType);
-  const targetDc = dc ? dcBackupTargetMap[dc] : null;
-  const match = backupTargets.find((it) => it.dc === targetDc);
-  return match ? match.value : null;
+  const targetValue = dc ? dcBackupTargetMap[dc] : 'other';
+  const match = backupTargets.find((it) => it.value === targetValue);
+  return match ? match.value : 'other';
+};
+
+/**
+ * Build the `container` value sent to Cinder for the selected target.
+ * A new UUID is generated on every call, so each backup lands in its own
+ * directory: `<share>/<uuid[0:2]>/<uuid[2:4]>/<uuid>`.
+ * Falls back to the 'other' share when the target is unrecognized.
+ */
+export const getBackupContainer = (target) => {
+  const match =
+    backupTargets.find((it) => it.value === target) ||
+    backupTargets.find((it) => it.value === 'other');
+  const id = uuidv4();
+  return `${match.share}/${id.slice(0, 2)}/${id.slice(2, 4)}/${id}`;
 };
 
 export const backupTargetTip = t(

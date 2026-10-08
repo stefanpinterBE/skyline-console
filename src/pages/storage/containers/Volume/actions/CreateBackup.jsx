@@ -26,6 +26,7 @@ import {
   backupTargets,
   backupTargetTip,
   getDefaultBackupTarget,
+  getBackupContainer,
 } from 'resources/cinder/backup';
 
 export class CreateBackup extends ModalAction {
@@ -115,16 +116,15 @@ export class CreateBackup extends ModalAction {
 
   onSubmit = (values) => {
     const { id } = this.item;
-    // NOTE: `backupTarget` is scaffolding for a future "choose backup
-    // destination" feature. It is not sent to Cinder yet - `container` is
-    // intentionally left out, so the backend behaves exactly as before.
-    const { name, incremental } = values;
+    const { name, incremental, backupTarget } = values;
     const force = isInUse(this.item);
+    const container = getBackupContainer(backupTarget);
     const body = {
       name,
       incremental,
       volume_id: id,
       force,
+      container,
     };
     return this.store.create(body);
   };

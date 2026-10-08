@@ -16,6 +16,7 @@ import {
   backupTargets,
   getVolumeTypeDc,
   getDefaultBackupTarget,
+  getBackupContainer,
 } from './backup';
 
 describe('getVolumeTypeDc', () => {
@@ -25,10 +26,10 @@ describe('getVolumeTypeDc', () => {
     expect(getVolumeTypeDc('BE.5000.DC2')).toBe('dc2');
   });
 
-  it('treats ".dcN.old" suffixes the same as ".dcN"', () => {
-    expect(getVolumeTypeDc('be.5000.dc1.old')).toBe('dc1');
-    expect(getVolumeTypeDc('be.5000.dc2.old')).toBe('dc2');
-    expect(getVolumeTypeDc('BE.5000.DC1.OLD')).toBe('dc1');
+  it('does NOT match ".dcN.old" suffixes - only an exact ".dcN" counts', () => {
+    expect(getVolumeTypeDc('be.5000.dc1.old')).toBeNull();
+    expect(getVolumeTypeDc('be.5000.dc2.old')).toBeNull();
+    expect(getVolumeTypeDc('BE.5000.DC1.OLD')).toBeNull();
   });
 
   it('returns null when there is no dc suffix', () => {
@@ -41,31 +42,49 @@ describe('getVolumeTypeDc', () => {
 });
 
 describe('getDefaultBackupTarget', () => {
-  it('preselects the first dummy option in the opposite data center', () => {
-    expect(getDefaultBackupTarget('be.5000.dc1')).toBe('dummy3');
-    expect(getDefaultBackupTarget('be.5000.dc2')).toBe('dummy1');
+  it('defaults to the opposite data center', () => {
+    expect(getDefaultBackupTarget('be.5000.dc1')).toBe('dc2');
+    expect(getDefaultBackupTarget('be.5000.dc2')).toBe('dc1');
   });
 
-  it('works the same for ".old" volume types', () => {
-    expect(getDefaultBackupTarget('be.5000.dc1.old')).toBe('dummy3');
-    expect(getDefaultBackupTarget('be.5000.dc2.old')).toBe('dummy1');
+  it('falls back to "other" for ".old" volume types', () => {
+    expect(getDefaultBackupTarget('be.5000.dc1.old')).toBe('other');
+    expect(getDefaultBackupTarget('be.5000.dc2.old')).toBe('other');
   });
 
-  it('returns null when the data center cannot be derived', () => {
-    expect(getDefaultBackupTarget('powerstore-nfs-5000')).toBeNull();
-    expect(getDefaultBackupTarget('')).toBeNull();
+  it('falls back to "other" when the data center cannot be derived', () => {
+    expect(getDefaultBackupTarget('powerstore-nfs-5000')).toBe('other');
+    expect(getDefaultBackupTarget('')).toBe('other');
   });
 });
 
 describe('backupTargets', () => {
-  it('exposes the dummy options grouped by data center', () => {
+  it('exposes the three share targets', () => {
     expect(backupTargets.map((it) => it.value)).toEqual([
-      'dummy1',
-      'dummy2',
-      'dummy3',
-      'dummy4',
+      'dc1',
+      'dc2',
+      'other',
     ]);
-    expect(backupTargets.filter((it) => it.dc === 'dc1')).toHaveLength(2);
-    expect(backupTargets.filter((it) => it.dc === 'dc2')).toHaveLength(2);
+  });
+});
+
+describe('getBackupContainer', () => {
+  const uuidPath = /^[0-9a-f]{2}\/[0-9a-f]{2}\/[0-9a-f-]{36}$/;
+
+  it('builds a sharded path below the matching share', () => {
+    backupTargets.forEach(({ value, share }) => {
+      const container = getBackupContainer(value);
+      expect(container.startsWith(`${share}/`)).toBe(true);
+      expect(container.slice(share.length + 1)).toMatch(uuidPath);
+    });
+  });
+
+  it('falls back to the "other" share for an unknown target', () => {
+    const other = backupTargets.find((it) => it.value === 'other');
+    expect(getBackupContainer('nope').startsWith(`${other.share}/`)).toBe(true);
+  });
+
+  it('returns a new container on every call', () => {
+    expect(getBackupContainer('dc1')).not.toBe(getBackupContainer('dc1'));
   });
 });
