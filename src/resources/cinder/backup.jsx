@@ -59,11 +59,11 @@ export const modeTip = t(
 // ---------------------------------------------------------------------------
 // Backup target ("container") selection
 //
-// Volume types ending in exactly ".dc1" are backed up to the DC2 share, and
-// volume types ending in exactly ".dc2" are backed up to the DC1 share - the
-// backup always lands in the data center opposite to the one hosting the
-// volume. Any other volume type - including those ending in ".dc1.old" /
-// ".dc2.old" - falls back to a third, shared location.
+// Volume types ending in exactly ".dc1" are backed up to the stg09b_dc2_1
+// share, and volume types ending in exactly ".dc2" are backed up to the
+// stg09a_dc1_1 share - the backup always lands in the data center opposite to
+// the one hosting the volume. Any other volume type - including those ending
+// in ".dc1.old" / ".dc2.old" - falls back to the shared stg09c_dc2_2 share.
 //
 // Each backup gets its own directory below the chosen share, using the
 // sharded layout `<share>/<uuid[0:2]>/<uuid[2:4]>/<uuid>` (see
@@ -71,9 +71,21 @@ export const modeTip = t(
 // one of the three share names below.
 // ---------------------------------------------------------------------------
 export const backupTargets = [
-  { value: 'dc1', label: t('Data Center 1'), share: 'stg09a_dc2_1' },
-  { value: 'dc2', label: t('Data Center 2'), share: 'stg09b_dc_2_1' },
-  { value: 'other', label: t('Other'), share: 'stg09c_dc2_2' },
+  {
+    value: 'dc1',
+    label: `${t('Data Center 1')} (stg09a_dc1_1)`,
+    share: 'stg09a_dc1_1',
+  },
+  {
+    value: 'dc2',
+    label: `${t('Data Center 2')} (stg09b_dc2_1)`,
+    share: 'stg09b_dc2_1',
+  },
+  {
+    value: 'other',
+    label: `${t('Other')} (stg09c_dc2_2)`,
+    share: 'stg09c_dc2_2',
+  },
 ];
 
 // Where a volume of a given DC should be backed up to. Backups are stored in
