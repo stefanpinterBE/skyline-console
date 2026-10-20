@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React from 'react';
 import { inject, observer } from 'mobx-react';
 import { ModalAction } from 'containers/Action';
 import globalVolumeStore from 'stores/cinder/volume';
@@ -24,6 +25,12 @@ import {
   getQuota,
   getQuotaInfo,
   checkQuotaDisable,
+  backupTargets,
+  backupTargetTip,
+  getDefaultBackupTarget,
+  getBackupContainer,
+  isSameLocationBackupTarget,
+  sameLocationWarning,
 } from 'resources/cinder/backup';
 import {
   isAvailableOrInUse,
@@ -53,6 +60,7 @@ export class Create extends ModalAction {
     this.store = globalBackupStore;
     this.volumeStore = globalVolumeStore;
     fetchQuota(this);
+    this.state.backupTarget = 'other';
   }
 
   get tips() {
@@ -62,6 +70,7 @@ export class Create extends ModalAction {
   get defaultValue() {
     return {
       incremental: false,
+      backupTarget: 'other',
     };
   }
 
@@ -91,7 +100,22 @@ export class Create extends ModalAction {
     const { selectedRows = [] } = value || {};
     const volume = selectedRows[0] || {};
     this.store.setCurrentVolume(volume);
+    const backupTarget = getDefaultBackupTarget(volume.volume_type);
+    this.setState({ backupTarget });
+    if (this.formRef.current) {
+      this.formRef.current.setFieldsValue({ backupTarget });
+    }
   };
+
+  get backupTargetWarning() {
+    const { currentVolume = {} } = this.store;
+    const { volume_type: volumeType } = currentVolume;
+    const { backupTarget } = this.state;
+    if (isSameLocationBackupTarget(volumeType, backupTarget)) {
+      return <span style={{ color: 'red' }}>{sameLocationWarning}</span>;
+    }
+    return null;
+  }
 
   disabledVolume = (item) => {
     if (!isAvailableOrInUse(item)) {
@@ -136,19 +160,34 @@ export class Create extends ModalAction {
         ...volumeSelectTablePropsBackend,
         onChange: this.onVolumeChange,
       },
+      {
+        name: 'backupTarget',
+        label: t('Backup Location'),
+        type: 'select',
+        options: backupTargets,
+        required: true,
+        tip: backupTargetTip,
+        extra: this.backupTargetWarning,
+        onChange: (value) => {
+          this.setState({ backupTarget: value });
+        },
+      },
     ];
   }
 
   onSubmit = (values) => {
     const {
       volume: { selectedRowKeys, selectedRows },
+      backupTarget,
       ...rest
     } = values;
     const force = isInUse(selectedRows[0]);
+    const container = getBackupContainer(backupTarget);
     const body = {
       ...rest,
       volume_id: selectedRowKeys[0],
       force,
+      container,
     };
     return this.store.create(body);
   };

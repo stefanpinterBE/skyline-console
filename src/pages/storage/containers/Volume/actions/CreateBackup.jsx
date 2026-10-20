@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React from 'react';
 import { inject, observer } from 'mobx-react';
 import { ModalAction } from 'containers/Action';
 import globalBackupStore from 'stores/cinder/backup';
@@ -27,6 +28,8 @@ import {
   backupTargetTip,
   getDefaultBackupTarget,
   getBackupContainer,
+  isSameLocationBackupTarget,
+  sameLocationWarning,
 } from 'resources/cinder/backup';
 
 export class CreateBackup extends ModalAction {
@@ -81,6 +84,10 @@ export class CreateBackup extends ModalAction {
         options: backupTargets,
         required: true,
         tip: backupTargetTip,
+        extra: this.backupTargetWarning,
+        onChange: (value) => {
+          this.setState({ backupTarget: value });
+        },
       },
       {
         name: 'incremental',
@@ -96,6 +103,16 @@ export class CreateBackup extends ModalAction {
     this.store = globalBackupStore;
     globalBackupStore.setCurrentVolume(this.item);
     fetchQuota(this);
+    this.state.backupTarget = this.defaultValue.backupTarget;
+  }
+
+  get backupTargetWarning() {
+    const { volume_type: volumeType } = this.item;
+    const { backupTarget } = this.state;
+    if (isSameLocationBackupTarget(volumeType, backupTarget)) {
+      return <span style={{ color: 'red' }}>{sameLocationWarning}</span>;
+    }
+    return null;
   }
 
   static get disableSubmit() {

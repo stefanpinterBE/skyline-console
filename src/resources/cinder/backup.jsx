@@ -83,7 +83,7 @@ export const backupTargets = [
   },
   {
     value: 'other',
-    label: `${t('Other')} (stg09c_dc2_2)`,
+    label: `${t('Data Center 2')} (stg09c_dc2_2)`,
     share: 'stg09c_dc2_2',
   },
 ];
@@ -137,6 +137,23 @@ export const getBackupContainer = (target) => {
 export const backupTargetTip = t(
   'The data center the backup will be stored in. By default a backup is placed in the data center opposite to the one hosting the volume.'
 );
+
+export const sameLocationWarning = t(
+  'WARNING: You are about to create a backup in the same location as its source volume. This is not recommended.'
+);
+
+/**
+ * Whether the selected backup target is the same data center that hosts the
+ * volume (based on the volume type's DC suffix). Volume types without a
+ * recognizable DC suffix never trigger the warning.
+ */
+export const isSameLocationBackupTarget = (volumeType, backupTarget) => {
+  const dc = getVolumeTypeDc(volumeType);
+  if (!dc) {
+    return false;
+  }
+  return backupTarget === dc;
+};
 
 export const restoreTip = (
   <span>
