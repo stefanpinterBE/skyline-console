@@ -101,16 +101,14 @@ export class Create extends ModalAction {
     const volume = selectedRows[0] || {};
     this.store.setCurrentVolume(volume);
     const backupTarget = getDefaultBackupTarget(volume.volume_type);
-    this.setState({ backupTarget });
+    this.setState({ backupTarget, volumeType: volume.volume_type });
     if (this.formRef.current) {
       this.formRef.current.setFieldsValue({ backupTarget });
     }
   };
 
   get backupTargetWarning() {
-    const { currentVolume = {} } = this.store;
-    const { volume_type: volumeType } = currentVolume;
-    const { backupTarget } = this.state;
+    const { volumeType, backupTarget } = this.state;
     if (isSameLocationBackupTarget(volumeType, backupTarget)) {
       return <span style={{ color: 'red' }}>{sameLocationWarning}</span>;
     }
