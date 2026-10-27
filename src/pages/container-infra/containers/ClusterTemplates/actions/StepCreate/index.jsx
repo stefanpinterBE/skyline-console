@@ -115,6 +115,7 @@ export class StepCreate extends StepAction {
 
     const body = {
       ...rest,
+      coe: 'kubernetes',
       labels: requestLabels,
       external_network_id: externalNetwork.selectedRowKeys[0],
       fixed_network: (fixedNetwork && fixedNetwork.selectedRowKeys[0]) || null,
