@@ -25,6 +25,8 @@ import {
   getUserData,
   canCreateIronicByEndpoint,
   hashPasswordForCloudInit,
+  isWindowsImage,
+  setServerPassword,
 } from 'resources/nova/instance';
 import { ironicOriginEndpoint } from 'client/client/constants';
 import Notify from 'components/Notify';
@@ -320,21 +322,27 @@ export class CreateIronic extends StepAction {
     if (loginType.value === 'keypair') {
       server.key_name = keypair.selectedRowKeys[0];
     } else {
-      server.adminPass = password;
+      setServerPassword(server, password);
     }
     if (count > 1) {
       server.min_count = count;
       server.max_count = count;
       server.return_reservation_id = true;
     }
-    if (server.adminPass || userData) {
-      const { username } = values;
+    const { username } = values;
+    if (!isWindowsImage(values) && (server.adminPass || userData)) {
       server.user_data = btoa(
         getUserData(server.adminPass, userData, username || 'root')
       );
+    } else if (isWindowsImage(values) && userData) {
+      server.user_data = btoa(userData);
     }
-    if (server.adminPass) {
+    if (server.adminPass && !isWindowsImage(values)) {
+      // Linux: only the hash is sent, never store plaintext in metadata
       server.adminPass = hashPasswordForCloudInit(server.adminPass);
+      if (server.metadata) {
+        delete server.metadata.admin_pass;
+      }
     }
     return {
       server,

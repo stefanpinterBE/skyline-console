@@ -269,10 +269,26 @@ const onlyUserData =
   '\n' +
   '--===============2309984059743762475==--';
 
+const randomSalt = () => {
+  const alphabet =
+    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
+  const length = 8 + Math.floor(Math.random() * 8);
+  let result = '';
+  for (let i = length; i > 0; i--) {
+    result += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return result;
+};
+
+export const hashPasswordForCloudInit = (password) => {
+  if (!password) {
+    return password;
+  }
+  return sha512.crypt(password, randomSalt());
+};
+
 export const getUserData = (password, userData, username = 'root') => {
   const hashedPassword = hashPasswordForCloudInit(password);
-
-
 
   if (password && userData) {
     let str = passwordAndUserData.replace(/USER_PASSWORD/g, hashedPassword);
@@ -599,16 +615,31 @@ export const isBootFromVolume = (item) => {
   return !item.image;
 };
 
-export const hashPasswordForCloudInit = (password) => {
-  const hashedPassword = sha512.crypt(password, randomSalt());
-  return hashedPassword;
-};
-const randomSalt = () => {
-  const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
-  const length = 8 + Math.random() * 8;
-  let result = '';
-  for (let i = length; i > 0; --i) {
-    result += alphabet[Math.floor(Math.random() * alphabet.length)];
+export const isWindowsImage = (values) => {
+  const {
+    source = {},
+    image = {},
+    bootableVolume = {},
+    instanceSnapshot = {},
+  } = values;
+  const { value: sourceValue } = source;
+  if (sourceValue === 'image') {
+    return image.selectedRows?.[0]?.os_distro === 'windows';
   }
-  return result;
-}
+  if (sourceValue === 'bootableVolume') {
+    const volMeta =
+      bootableVolume.selectedRows?.[0]?.origin_data?.volume_image_metadata ||
+      bootableVolume.selectedRows?.[0]?.volume_image_metadata;
+    return volMeta?.os_distro === 'windows';
+  }
+  if (sourceValue === 'instanceSnapshot') {
+    return instanceSnapshot.selectedRows?.[0]?.os_distro === 'windows';
+  }
+  return false;
+};
+
+export const setServerPassword = (server, password) => {
+  server.adminPass = password;
+  server.metadata = server.metadata || {};
+  server.metadata.admin_pass = password;
+};
